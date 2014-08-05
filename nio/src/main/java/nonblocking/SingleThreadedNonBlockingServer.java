@@ -125,6 +125,7 @@ public class SingleThreadedNonBlockingServer {
             socketChannel.register(selector, SelectionKey.OP_READ);
             pendingData.put(socketChannel, new LinkedList<ByteBuffer>());
             System.out.println("New connection: " + socketChannel);
+            System.out.println("Open channels: " + pendingData.size());
         } catch (IOException e) {
             e.printStackTrace();
         }
