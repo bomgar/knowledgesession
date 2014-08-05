@@ -1,5 +1,7 @@
 package nonblocking;
 
+import util.Magic;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -7,10 +9,18 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 public class SingleThreadedNonBlockingServer {
+
+    private static Map<SocketChannel, Queue<ByteBuffer>> pendingData = new HashMap<>();
+
+    private static ByteBuffer readBuffer = ByteBuffer.allocateDirect(80);
 
     public static void main(String[] args) throws IOException {
 
@@ -36,16 +46,16 @@ public class SingleThreadedNonBlockingServer {
         Iterator<SelectionKey> selectionKeyIterator = selectionKeys.iterator();
         while (selectionKeyIterator.hasNext()) {
             SelectionKey selectionKey = selectionKeyIterator.next();
-            handleSelectionKey(selectionKey, selector);
+            handleSelectionKey(selectionKey);
             selectionKeyIterator.remove();
         }
     }
 
-    private static void handleSelectionKey(final SelectionKey selectionKey, final Selector selector) {
+    private static void handleSelectionKey(final SelectionKey selectionKey) {
 
         if (selectionKey.isValid()) {
             if (selectionKey.isAcceptable()) {
-                handleAccept(selectionKey, selector);
+                handleAccept(selectionKey);
             } else if (selectionKey.isReadable()) {
                 handleReadable(selectionKey);
             } else if (selectionKey.isWritable()) {
@@ -63,14 +73,22 @@ public class SingleThreadedNonBlockingServer {
 
         try {
             SocketChannel socketChannel = ((ServerSocketChannel) selectionKey.channel()).accept();
-            ByteBuffer buffer = ByteBuffer.allocate(80);
-
-            int numRead = socketChannel.read(buffer);
+            readBuffer.clear();
+            int numRead = socketChannel.read(readBuffer);
 
             if (numRead == -1) {
                 socketChannel.close();
+                pendingData.remove(socketChannel);
             } else {
-
+                readBuffer.flip();
+                ByteBuffer responseBuffer = ByteBuffer.allocate(readBuffer.limit());
+                while (responseBuffer.hasRemaining()) {
+                    byte r = responseBuffer.get();
+                    responseBuffer.put((byte) Magic.doMagic(r));
+                }
+                responseBuffer.flip();
+                pendingData.get(socketChannel).offer(responseBuffer);
+                selectionKey.interestOps(SelectionKey.OP_WRITE);
             }
 
         } catch (IOException e) {
@@ -78,12 +96,13 @@ public class SingleThreadedNonBlockingServer {
         }
     }
 
-    private static void handleAccept(final SelectionKey selectionKey, final Selector selector) {
+    private static void handleAccept(final SelectionKey selectionKey) {
 
         try {
             SocketChannel socketChannel = ((ServerSocketChannel) selectionKey.channel()).accept();
             socketChannel.configureBlocking(false);
-            socketChannel.register(selector, SelectionKey.OP_READ);
+            selectionKey.interestOps(SelectionKey.OP_READ);
+            pendingData.put(socketChannel, new LinkedList<ByteBuffer>());
             System.out.println("New connection: " + socketChannel);
         } catch (IOException e) {
             e.printStackTrace();
