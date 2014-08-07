@@ -26,9 +26,9 @@ public class ChannelCopy {
             long remaining = Files.size(source);
             long pos = 0;
             while(remaining > 0) {
-                long transfered = ic.transferTo(pos, Math.min(remaining, CHUNK_SIZE), oc);
-                pos += transfered;
-                remaining -= transfered;
+                long transferred = ic.transferTo(pos, Math.min(remaining, CHUNK_SIZE), oc);
+                pos += transferred;
+                remaining -= transferred;
             }
 
         }
