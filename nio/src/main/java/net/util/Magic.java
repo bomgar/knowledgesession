@@ -1,4 +1,4 @@
-package util;
+package net.util;
 
 
 public class Magic {

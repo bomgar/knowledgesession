@@ -1,4 +1,4 @@
-package client;
+package net.client;
 
 import java.io.IOException;
 import java.net.Socket;

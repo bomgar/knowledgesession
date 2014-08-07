@@ -1,6 +1,6 @@
-package nonblocking;
+package net.nonblocking;
 
-import util.Magic;
+import net.util.Magic;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
