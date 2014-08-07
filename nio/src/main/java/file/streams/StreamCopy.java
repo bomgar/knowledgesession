@@ -13,11 +13,13 @@ public class StreamCopy {
         String source = "/home/phaun/Downloads/debuggingrules.jpg";
         String destination = "/tmp/debuggingrules.jpg";
 
+        byte[] buffer = new byte[4000];
+
         try (InputStream is = new FileInputStream(source);
              OutputStream os = new FileOutputStream(destination)) {
 
-            for(int buf; (buf = is.read()) != -1;) {
-                os.write(buf);
+            for (int read; (read = is.read(buffer)) != -1; ) {
+                os.write(buffer, 0, read);
             }
         }
 
