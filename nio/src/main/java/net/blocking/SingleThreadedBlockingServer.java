@@ -16,10 +16,8 @@ public class SingleThreadedBlockingServer {
         final ServerSocket serverSocket = new ServerSocket(9999);
 
         while (true) {
-
-            final Socket socket = serverSocket.accept();
             try (
-                    Socket s = socket;
+                    final Socket socket = serverSocket.accept();
                     InputStream is = socket.getInputStream();
                     OutputStream os = socket.getOutputStream()
             ) {
