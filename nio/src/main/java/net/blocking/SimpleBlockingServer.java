@@ -39,8 +39,8 @@ public class SimpleBlockingServer {
         public void run() {
             try (
                     Socket s = socket;
-                    InputStream is = socket.getInputStream();
-                    OutputStream os = socket.getOutputStream()
+                    InputStream is = s.getInputStream();
+                    OutputStream os = s.getOutputStream()
             ) {
 
                 for (int i = 0; (i = is.read()) != -1; ) {

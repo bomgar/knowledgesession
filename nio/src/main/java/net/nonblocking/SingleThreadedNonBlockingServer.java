@@ -18,8 +18,6 @@ import java.util.Set;
 
 public class SingleThreadedNonBlockingServer {
 
-    private static Map<SocketChannel, Queue<ByteBuffer>> pendingData = new HashMap<>();
-
     private static ByteBuffer readBuffer = ByteBuffer.allocateDirect(80);
 
     private static Selector selector;
@@ -71,35 +69,36 @@ public class SingleThreadedNonBlockingServer {
 
         try {
             SocketChannel socketChannel = ((SocketChannel) selectionKey.channel());
-            Queue<ByteBuffer> buffers = pendingData.get(socketChannel);
-            while (!buffers.isEmpty()) {
-                ByteBuffer buffer = buffers.peek();
+            Queue<ByteBuffer> pendingData = (Queue<ByteBuffer>) selectionKey.attachment();
+            while (!pendingData.isEmpty()) {
+                ByteBuffer buffer = pendingData.peek();
 
                 int written = socketChannel.write(buffer);
                 if (written == 0) {
                     break;
                 }
                 if (!buffer.hasRemaining()) {
-                    buffers.remove();
+                    pendingData.remove();
                 }
             }
-            selectionKey.interestOps(SelectionKey.OP_READ);
-
+            if(pendingData.isEmpty()) {
+                selectionKey.interestOps(SelectionKey.OP_READ);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private static void handleReadable(final SelectionKey selectionKey) {
-
         try {
             SocketChannel socketChannel = ((SocketChannel) selectionKey.channel());
+            Queue<ByteBuffer> pendingData = (Queue<ByteBuffer>) selectionKey.attachment();
             readBuffer.clear();
             int numRead = socketChannel.read(readBuffer);
 
             if (numRead == -1) {
+                System.out.println("Closed connection: " + socketChannel);
                 socketChannel.close();
-                pendingData.remove(socketChannel);
             } else {
                 readBuffer.flip();
                 ByteBuffer responseBuffer = ByteBuffer.allocate(readBuffer.limit());
@@ -108,7 +107,7 @@ public class SingleThreadedNonBlockingServer {
                     responseBuffer.put((byte) Magic.doMagic(r));
                 }
                 responseBuffer.flip();
-                pendingData.get(socketChannel).offer(responseBuffer);
+                pendingData.offer(responseBuffer);
                 selectionKey.interestOps(SelectionKey.OP_WRITE);
             }
 
@@ -122,10 +121,9 @@ public class SingleThreadedNonBlockingServer {
         try {
             SocketChannel socketChannel = ((ServerSocketChannel) selectionKey.channel()).accept();
             socketChannel.configureBlocking(false);
-            socketChannel.register(selector, SelectionKey.OP_READ);
-            pendingData.put(socketChannel, new LinkedList<ByteBuffer>());
+            SelectionKey clientSelectionKey = socketChannel.register(selector, SelectionKey.OP_READ);
+            clientSelectionKey.attach(new LinkedList<ByteBuffer>());
             System.out.println("New connection: " + socketChannel);
-            System.out.println("Open channels: " + pendingData.size());
         } catch (IOException e) {
             e.printStackTrace();
         }
