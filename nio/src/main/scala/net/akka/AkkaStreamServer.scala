@@ -27,9 +27,7 @@ object AkkaStreamServer extends App {
     println(s"New connection from: ${connection.remoteAddress}")
 
     val magicFlow = Flow[ByteString]
-      .map(b => b.toByteBuffer.array())
       .map(_.map(b => Magic.doMagic(b.toInt).toByte))
-      .map(ByteString.apply)
 
     connection.handleWith(magicFlow)
   }
