@@ -13,8 +13,8 @@
     </modules>
 
     <properties>
-        <scala.version>2.10.3</scala.version>
-        <akka.version>2.3.4</akka.version>
+        <scala.version>2.11.4</scala.version>
+        <akka.version>2.3.9</akka.version>
     </properties>
 
 
@@ -23,16 +23,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.3</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>3.1.5</version>
+                <version>3.2.2</version>
                 <executions>
                     <execution>
                         <id>main-scalac</id>
@@ -60,7 +60,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.0.21.Final</version>
+            <version>4.0.29.Final</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
@@ -82,20 +82,20 @@
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor_2.10</artifactId>
+            <artifactId>akka-actor_2.11</artifactId>
             <version>${akka.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-slf4j_2.10</artifactId>
+            <artifactId>akka-slf4j_2.11</artifactId>
             <version>${akka.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
-            <version>2.1.1</version>
+            <version>2.1.5</version>
             <exclusions>
                 <exclusion>
                     <groupId>log4j</groupId>
