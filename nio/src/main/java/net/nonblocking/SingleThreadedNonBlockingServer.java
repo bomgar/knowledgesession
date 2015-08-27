@@ -70,16 +70,10 @@ public class SingleThreadedNonBlockingServer {
         try {
             SocketChannel socketChannel = ((SocketChannel) selectionKey.channel());
             Queue<ByteBuffer> pendingData = (Queue<ByteBuffer>) selectionKey.attachment();
-            while (!pendingData.isEmpty()) {
-                ByteBuffer buffer = pendingData.peek();
-
-                int written = socketChannel.write(buffer);
-                if (written == 0) {
-                    break;
-                }
-                if (!buffer.hasRemaining()) {
-                    pendingData.remove();
-                }
+            ByteBuffer buffer = pendingData.peek();
+            socketChannel.write(buffer);
+            if (!buffer.hasRemaining()) {
+                pendingData.remove();
             }
             if(pendingData.isEmpty()) {
                 selectionKey.interestOps(SelectionKey.OP_READ);
